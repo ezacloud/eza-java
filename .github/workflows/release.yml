@@ -24,6 +24,11 @@ jobs:
           server-username: SONATYPE_USERNAME
           server-password: SONATYPE_PASSWORD
 
+      - name: Set up Maven 3.9.9
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: '3.9.9'
+
       - name: Generate GPG Key for Signing
         run: |
           cat <<EOF > /tmp/gpg-batch
