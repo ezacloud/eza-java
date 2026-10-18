@@ -52,4 +52,11 @@ jobs:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         run: |
-          mvn --batch-mode clean deploy -DskipTests=false
+          mvn -version
+          mvn --batch-mode clean deploy -DskipTests=false 2>&1 | tee /tmp/mvn.log || {
+            echo "### Maven Build / Publish Failure Log" >> $GITHUB_STEP_SUMMARY
+            echo '```text' >> $GITHUB_STEP_SUMMARY
+            tail -n 120 /tmp/mvn.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
