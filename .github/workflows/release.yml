@@ -1,0 +1,50 @@
+name: Publish to Maven Central
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          server-id: central
+          server-username: SONATYPE_USERNAME
+          server-password: SONATYPE_PASSWORD
+
+      - name: Generate GPG Key for Signing
+        run: |
+          cat <<EOF > /tmp/gpg-batch
+          %no-protection
+          Key-Type: RSA
+          Key-Length: 3072
+          Subkey-Type: RSA
+          Subkey-Length: 3072
+          Name-Real: Eza Cloud
+          Name-Email: support@eza.co.ke
+          Expire-Date: 0
+          EOF
+          gpg --batch --generate-key /tmp/gpg-batch
+          KEY_ID=$(gpg --list-keys --with-colons | grep fpr | head -1 | cut -d: -f10)
+          echo "Generated GPG Key: $KEY_ID"
+          gpg --keyserver keyserver.ubuntu.com --send-keys "$KEY_ID" || true
+          gpg --keyserver keys.openpgp.org --send-keys "$KEY_ID" || true
+
+      - name: Build, Test, Sign and Publish to Maven Central
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+        run: |
+          mvn --batch-mode clean deploy -DskipTests=false

@@ -61,7 +61,7 @@ public final class Webhook {
             throw new SignatureException("timestamp outside tolerance zone (" + toleranceSeconds + "s)");
         }
 
-        String payloadToSign = "t." + timestamp + "." + rawBody;
+        String payloadToSign = timestamp + "." + rawBody;
         String computedSignature = computeHmacSha256(payloadToSign, secret);
 
         if (!MessageDigest.isEqual(computedSignature.getBytes(StandardCharsets.UTF_8), signature.getBytes(StandardCharsets.UTF_8))) {
